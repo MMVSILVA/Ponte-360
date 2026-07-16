@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="100%" height="100%">
+  <!-- Outer Circular Dashed Arrow Rim -->
+  <!-- Top solid arc from 9 o'clock to 2 o'clock -->
+  <path
+    d="M 25,100 A 75,75 0 0,1 153,47"
+    stroke="#0F4C81"
+    stroke-width="6"
+    stroke-linecap="round"
+    fill="none"
+  />
+  
+  <!-- Clockwise Arrow Tip -->
+  <path
+    d="M 141,43 L 165,51 L 157,26"
+    stroke="#0F4C81"
+    stroke-width="5"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    fill="none"
+  />
+
+  <!-- Dotted path on the left -->
+  <path
+    d="M 25,100 A 75,75 0 0,0 55,155"
+    stroke="#0F4C81"
+    stroke-width="6"
+    stroke-linecap="round"
+    stroke-dasharray="1 14"
+    fill="none"
+  />
+
+  <!-- Orange dots on the bottom right (curving up) -->
+  <!-- Dot 1 -->
+  <circle cx="143" cy="161" r="5" fill="#F58220" />
+  <!-- Dot 2 -->
+  <circle cx="155" cy="151" r="6.5" fill="#F58220" />
+  <!-- Dot 3 -->
+  <circle cx="164" cy="139" r="8" fill="#F58220" />
+  <!-- Dot 4 -->
+  <circle cx="171" cy="124" r="9.5" fill="#F58220" />
+
+  <!-- The Bridge (Ponte) -->
+  <!-- Deck -->
+  <path
+    d="M 35,76 C 55,79 145,79 165,76"
+    stroke="#0F4C81"
+    stroke-width="4.5"
+    stroke-linecap="round"
+    fill="none"
+  />
+  <!-- Suspension Cable -->
+  <path
+    d="M 35,76 Q 47,56 60,48 Q 100,76 140,48 Q 153,56 165,76"
+    stroke="#0F4C81"
+    stroke-width="3"
+    fill="none"
+  />
+  <!-- Towers -->
+  <line x1="60" y1="48" x2="60" y2="82" stroke="#0F4C81" stroke-width="4" />
+  <line x1="140" y1="48" x2="140" y2="82" stroke="#0F4C81" stroke-width="4" />
+  <!-- Suspenders -->
+  <line x1="75" y1="57" x2="75" y2="78" stroke="#0F4C81" stroke-width="1.5" />
+  <line x1="90" y1="64" x2="90" y2="78" stroke="#0F4C81" stroke-width="1.5" />
+  <line x1="110" y1="64" x2="110" y2="78" stroke="#0F4C81" stroke-width="1.5" />
+  <line x1="125" y1="57" x2="125" y2="78" stroke="#0F4C81" stroke-width="1.5" />
+
+  <!-- Human Figure -->
+  <circle cx="100" cy="100" r="10.5" fill="#0F4C81" />
+  <path
+    d="M 69,87 C 80,94 92,104 94,112 C 94,124 93,132 94,136 C 97,138 103,138 106,136 C 107,132 106,124 106,112 C 108,104 120,94 131,87 C 125,83 115,92 107,101 C 104,105 102,109 101,111 C 99,109 97,105 94,101 C 86,92 76,83 69,87 Z"
+    fill="#0F4C81"
+  />
+
+  <!-- Hand Supporting from bottom -->
+  <path
+    d="M 35,128 C 45,142 65,153 85,153 C 105,153 118,142 126,128 C 112,130 98,131 87,138 C 76,134 62,132 48,132 C 40,131 36,129 35,128 Z"
+    fill="#0F4C81"
+  />
+
+  <!-- Connection hubs -->
+  <path d="M 130,85 L 140,85 L 148,77 L 165,77" stroke="#0F4C81" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+  <circle cx="169" cy="77" r="5" fill="#0F4C81" />
+
+  <path d="M 132,91 L 165,91" stroke="#F58220" stroke-width="3.5" stroke-linecap="round" fill="none" />
+  <circle cx="169" cy="91" r="5" fill="#F58220" />
+
+  <path d="M 130,97 L 140,97 L 148,105 L 165,105" stroke="#0F4C81" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+  <circle cx="169" cy="105" r="5" fill="#0F4C81" />
+</svg>

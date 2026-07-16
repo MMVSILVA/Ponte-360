@@ -245,8 +245,8 @@ export default function App() {
       {/* SIDEBAR NAVIGATION - Geometric Balance style */}
       <aside className="w-64 bg-slate-900 flex flex-col border-r border-slate-800 shrink-0 text-slate-300">
         {/* Top Branding Section */}
-        <div className="p-4 border-b border-slate-800 flex items-center shrink-0">
-          <LogoPonte360 variant="dark" className="h-11" />
+        <div className="p-4 border-b border-slate-800 flex items-center justify-center shrink-0 w-full">
+          <LogoPonte360 className="w-full" />
         </div>
         
         {/* Navigation Categories */}
