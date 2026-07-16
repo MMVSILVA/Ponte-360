@@ -1,0 +1,6 @@
+{
+  "name": "Ponte 360",
+  "description": "Instrumento de Escuta Coletiva e Governança de Saúde Psicossocial em Saúde Ocupacional (NR-1 e ISO 45003).",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
