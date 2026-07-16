@@ -36,8 +36,8 @@ function openDB(): Promise<IDBDatabase> {
 function generateMockData(): Atendimento[] {
   const atendimentos: Atendimento[] = [];
   const cycles = ["Ciclo 2025", "Ciclo 2026"];
-  const units = ["Volta Redonda", "Barra Mansa", "Resende"];
-  const areas = ["Operações", "Manutenção", "Administrativo", "Qualidade & HSE"];
+  const units = METADATA_LABELS.unidades;
+  const areas = METADATA_LABELS.areas;
   
   let idCounter = 1;
 
@@ -46,7 +46,7 @@ function generateMockData(): Atendimento[] {
     for (const unidade of units) {
       for (const area of areas) {
         const sectors = METADATA_LABELS.setores[area as keyof typeof METADATA_LABELS.setores] || [];
-        const count = area === "Operações" ? 4 : 2;
+        const count = area === "Educação Profissional" ? 4 : 2;
         
         for (let i = 0; i < count; i++) {
           const sector = sectors[i % sectors.length];
@@ -61,45 +61,45 @@ function generateMockData(): Atendimento[] {
           
           // Block 1: Metas, demandas (Risco).
           let b1Base = 2.5;
-          if (unidade === "Volta Redonda" && area === "Operações") {
+          if (unidade.includes("Volta Redonda") && area === "Educação Profissional") {
             b1Base = is2026 ? 2.8 : 4.4; // Improved from 4.4 (high overload) to 2.8 in 2026
-          } else if (unidade === "Resende") {
+          } else if (unidade.includes("Resende")) {
             b1Base = 3.3;
           } else {
             b1Base = 2.2;
           }
           
           // Block 2: Autonomia (Proteção).
-          let b2Base = area === "Administrativo" ? 4.4 : 3.4;
-          if (unidade === "Volta Redonda" && !is2026) {
+          let b2Base = area === "Administrativo & Operações" ? 4.4 : 3.4;
+          if (unidade.includes("Volta Redonda") && !is2026) {
             b2Base -= 0.8; // Worse in 2025
           }
           
           // Block 3: Liderança & Segurança (Proteção).
           let b3Base = 4.0;
-          if (unidade === "Volta Redonda" && !is2026) b3Base = 2.9;
-          if (unidade === "Resende" && is2026) b3Base = 3.2; // Drop in safety in Resende 2026
+          if (unidade.includes("Volta Redonda") && !is2026) b3Base = 2.9;
+          if (unidade.includes("Resende") && is2026) b3Base = 3.2; // Drop in safety in Resende 2026
           
           // Block 4: Reconhecimento (Proteção).
           let b4Base = 3.6;
-          if (unidade === "Barra Mansa") b4Base = 4.3; // Barra Mansa scores high
+          if (unidade.includes("Barra Mansa")) b4Base = 4.3; // Barra Mansa scores high
           
           // Block 5: Respeito (Proteção).
           let b5Base = 4.4;
-          if (unidade === "Resende" && is2026 && area === "Operações") {
+          if (unidade.includes("Resende") && is2026 && area === "Educação Profissional") {
             b5Base = 2.6; // High tension/conflict in Resende 2026!
           }
           
           // Block 6: Equilíbrio (Proteção).
           let b6Base = 3.7;
-          if (area === "Manutenção") b6Base = 3.0; // Lots of emergency tasks
-          if (unidade === "Volta Redonda" && area === "Operações" && !is2026) {
+          if (area === "Saúde & Lazer") b6Base = 3.0; // Lots of emergency tasks
+          if (unidade.includes("Volta Redonda") && area === "Educação Profissional" && !is2026) {
             b6Base = 2.5; // Burnout warning in 2025
           }
           
           // Block 7: Recursos (Proteção).
           let b7Base = 4.1;
-          if (unidade === "Volta Redonda" && !is2026) b7Base = 3.2;
+          if (unidade.includes("Volta Redonda") && !is2026) b7Base = 3.2;
           
           const bases = [b1Base, b2Base, b3Base, b4Base, b5Base, b6Base, b7Base];
           
@@ -121,23 +121,23 @@ function generateMockData(): Atendimento[] {
           }
           
           // Organizational signals matching the profile
-          let horasExtras = area === "Manutenção" ? 14 + (idCounter % 7) : 2 + (idCounter % 5);
-          if (unidade === "Volta Redonda" && area === "Operações" && !is2026) {
-            horasExtras += 15; // VR Operations worked extreme hours in 2025
+          let horasExtras = area === "Saúde & Lazer" ? 14 + (idCounter % 7) : 2 + (idCounter % 5);
+          if (unidade.includes("Volta Redonda") && area === "Educação Profissional" && !is2026) {
+            horasExtras += 15; // VR worked extreme hours in 2025
           }
           
           let absenteismo = 1.2 + (idCounter % 4) * 0.6;
-          if (unidade === "Volta Redonda" && !is2026) {
+          if (unidade.includes("Volta Redonda") && !is2026) {
             absenteismo += 4.2; // High absenteeism in VR 2025
           }
           
           let rotatividade = 1.5 + (idCounter % 5) * 0.8;
-          if (unidade === "Resende" && is2026) {
+          if (unidade.includes("Resende") && is2026) {
             rotatividade += 5.5; // High turnover in Resende 2026
           }
           
           let procuraSaude = (idCounter % 7 === 0) ? 1 : 0;
-          if (unidade === "Volta Redonda" && area === "Operações" && !is2026) {
+          if (unidade.includes("Volta Redonda") && area === "Educação Profissional" && !is2026) {
             procuraSaude += 2;
           }
           
@@ -179,42 +179,42 @@ function generateMockPlans(): PlanoDeAcao[] {
       id: "plano-1",
       indicadorId: 1,
       blocoNome: "Metas, demandas e ritmo de trabalho",
-      descricao: "Programa de Redução de Sobrecarga: Revisão de metas comerciais da Linha de Montagem, contratação temporária para gargalos de produção e instituição de folgas de recuperação programadas.",
-      responsavel: "Dra. Eliane Santos (Saúde Ocupacional) & Eng. Carlos Mendes (Produção)",
+      descricao: "Programa de Redução de Sobrecarga: Revisão de metas de atendimento de alunos, contratação de professores substitutos para gargalos de aulas e instituição de folgas de recuperação programadas.",
+      responsavel: "Dra. Eliane Santos (Saúde Ocupacional) & Mariana Souza (Coordenação)",
       prazo: "2025-11-30",
       status: "Concluído",
-      resultados: "Sucesso. No Ciclo 2026, o índice de risco do bloco caiu de 85% para 45%. Absenteísmo na área de Operações caiu pela metade.",
+      resultados: "Sucesso. No Ciclo 2026, o índice de risco do bloco caiu de 85% para 45%. Absenteísmo na área de Educação Profissional caiu pela metade.",
       comentarios: "Ação realizada em parceria direta com o sindicato local e comitê de ética após o diagnóstico de burnout no Ciclo 2025.",
-      unidade: "Volta Redonda",
-      area: "Operações",
+      unidade: "Senai Volta Redonda",
+      area: "Educação Profissional",
       dataCriacao: "2025-06-15"
     },
     {
       id: "plano-2",
       indicadorId: 5,
       blocoNome: "Respeito, relações e violência no trabalho",
-      descricao: "Mediação ativa e ciclo de rodas de conversa ética: Aplicação de sensibilização sobre assédio moral e violência verbal na equipe de Operações de Resende, devido a alertas sentinela e queda do índice de respeito.",
+      descricao: "Mediação ativa e ciclo de rodas de conversa ética: Aplicação de sensibilização sobre assédio moral e violência verbal na equipe de Educação Profissional do Senai Resende, devido a alertas sentinela e queda do índice de respeito.",
       responsavel: "Roberto Alencar (Recursos Humanos)",
       prazo: "2026-08-15",
       status: "Em Andamento",
       resultados: "Rodas de escuta iniciadas em Junho/2026. Comitê de acompanhamento neutro estabelecido.",
       comentarios: "Meta de elevar o índice de respeito favorável de 40% para pelo menos 75% no próximo ciclo monitorado.",
-      unidade: "Resende",
-      area: "Operações",
+      unidade: "Senai Resende",
+      area: "Educação Profissional",
       dataCriacao: "2026-05-10"
     },
     {
       id: "plano-3",
       indicadorId: 3,
       blocoNome: "Liderança, apoio e segurança para falar",
-      descricao: "Treinamento de Liderança Facilitadora: Capacitação obrigatória de lideranças em liderança humanizada, segurança psicológica de times (ISO 45003) e canais éticos anônimos.",
-      responsavel: "Comitê de Ética & Diretoria de Operações",
+      descricao: "Treinamento de Liderança Facilitadora: Capacitação obrigatória de diretores e coordenadores escolares em liderança humanizada, segurança psicológica de times (ISO 45003) e canais éticos anônimos.",
+      responsavel: "Comitê de Ética & Diretoria Escolar",
       prazo: "2026-09-30",
       status: "Em Andamento",
       resultados: "50% dos líderes de Volta Redonda e Resende já completaram o módulo básico.",
       comentarios: "Ação iniciada após feedback dos canais de Ouvidoria e o monitoramento ético do Ponte 360.",
-      unidade: "Volta Redonda",
-      area: "Manutenção",
+      unidade: "Sesi Volta Redonda",
+      area: "Educação Básica",
       dataCriacao: "2026-04-18"
     }
   ];
@@ -243,16 +243,8 @@ export class DataService {
       const request = store.getAll();
       
       request.onerror = () => reject(request.error);
-      request.onsuccess = async () => {
-        let results = request.result;
-        if (results.length === 0) {
-          // Database is empty, auto-seed
-          const mockData = generateMockData();
-          await DataService.salvarVariosRegistros(mockData);
-          resolve(mockData);
-        } else {
-          resolve(results);
-        }
+      request.onsuccess = () => {
+        resolve(request.result || []);
       };
     });
   }
@@ -292,15 +284,8 @@ export class DataService {
       const request = store.getAll();
       
       request.onerror = () => reject(request.error);
-      request.onsuccess = async () => {
-        let results = request.result;
-        if (results.length === 0) {
-          const mockPlans = generateMockPlans();
-          await DataService.salvarVariosPlanos(mockPlans);
-          resolve(mockPlans);
-        } else {
-          resolve(results);
-        }
+      request.onsuccess = () => {
+        resolve(request.result || []);
       };
     });
   }
@@ -348,6 +333,7 @@ export class DataService {
    * Resets database completely and seeds fresh mock data.
    */
   static async resetarBanco(): Promise<void> {
+    localStorage.removeItem("ponte360_db_emptied");
     const db = await openDB();
     return new Promise((resolve, reject) => {
       // Clear atendimentos
@@ -369,6 +355,24 @@ export class DataService {
         tx2.onerror = () => reject(tx2.error);
       };
       tx1.onerror = () => reject(tx1.error);
+    });
+  }
+
+  /**
+   * Completely clears the database (leaves 0 records) and prevents auto-seeding.
+   */
+  static async zerarBancoTotalmente(): Promise<void> {
+    localStorage.setItem("ponte360_db_emptied", "true");
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction([STORE_ATENDIMENTOS, STORE_PLANOS], "readwrite");
+      tx.objectStore(STORE_ATENDIMENTOS).clear();
+      tx.objectStore(STORE_PLANOS).clear();
+      
+      tx.oncomplete = () => {
+        resolve();
+      };
+      tx.onerror = () => reject(tx.error);
     });
   }
 

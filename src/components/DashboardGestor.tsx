@@ -21,10 +21,10 @@ interface DashboardGestorProps {
 }
 
 const GESTORES_PROFILES = [
-  { nome: "Carlos Mendes", cargo: "Gerente de Operações", area: "Operações" },
-  { nome: "Fernanda Rocha", cargo: "Gerente de Administrativo", area: "Administrativo" },
-  { nome: "Alexandre Silva", cargo: "Gerente de Manutenção", area: "Manutenção" },
-  { nome: "Dra. Patrícia Lima", cargo: "Coordenadora de Qualidade & HSE", area: "Qualidade & HSE" }
+  { nome: "Prof. Marcos Oliveira", cargo: "Coordenador de Educação Básica", area: "Educação Básica" },
+  { nome: "Mariana Souza", cargo: "Gerente de Educação Profissional", area: "Educação Profissional" },
+  { nome: "Carlos Mendes", cargo: "Supervisor Administrativo & Operações", area: "Administrativo & Operações" },
+  { nome: "Dra. Patrícia Lima", cargo: "Coordenadora de Saúde & Lazer", area: "Saúde & Lazer" }
 ];
 
 export default function DashboardGestor({ registros, planos, onAdicionarPlano }: DashboardGestorProps) {
@@ -37,21 +37,34 @@ export default function DashboardGestor({ registros, planos, onAdicionarPlano }:
   const [setor, setSetor] = useState("");
   const [ciclo, setCiclo] = useState("");
   const [turno, setTurno] = useState("");
+  const [cargo, setCargo] = useState("");
+  const [dataInicio, setDataInicio] = useState("");
+  const [dataFim, setDataFim] = useState("");
 
   const setoresDisponiveis = METADATA_LABELS.setores[activeGestor.area as keyof typeof METADATA_LABELS.setores] || [];
+
+  const clearFilters = () => {
+    setUnidade("");
+    setSetor("");
+    setCiclo("");
+    setTurno("");
+    setCargo("");
+    setDataInicio("");
+    setDataFim("");
+  };
 
   // Filter package
   const filtros = useMemo(() => ({
     unidade,
     area: activeGestor.area, // LOCKED!
     setor,
-    cargo: "",
+    cargo,
     turno,
     ciclo,
     tempoEmpresa: "",
-    dataInicio: "",
-    dataFim: ""
-  }), [unidade, activeGestor.area, setor, turno, ciclo]);
+    dataInicio,
+    dataFim
+  }), [unidade, activeGestor.area, setor, cargo, turno, ciclo, dataInicio, dataFim]);
 
   const registrosFiltrados = useMemo(() => {
     return filtrarRegistros(registros, filtros);
@@ -124,13 +137,20 @@ export default function DashboardGestor({ registros, planos, onAdicionarPlano }:
 
       {/* Painel de Filtros Restritos */}
       <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-5 shadow-xs space-y-4">
-        <div className="border-b border-slate-100 dark:border-slate-800 pb-3">
+        <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
           <h4 className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-2">
             Filtros Disponíveis no seu Escopo ({activeGestor.area})
           </h4>
+          <button 
+            id="btn-gestor-limpar-filtros"
+            onClick={clearFilters}
+            className="text-xs text-orange-500 hover:text-orange-600 font-bold uppercase tracking-wider cursor-pointer font-sans"
+          >
+            Limpar Filtros
+          </button>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-4">
           {/* Unidade */}
           <div>
             <label htmlFor="gestor-filter-unidade" className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wider">Unidade</label>
@@ -140,7 +160,7 @@ export default function DashboardGestor({ registros, planos, onAdicionarPlano }:
               onChange={(e) => setUnidade(e.target.value)}
               className="w-full rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-xs bg-white dark:bg-slate-900 text-slate-950 dark:text-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
             >
-              <option value="">Todas as Unidades</option>
+              <option value="">Todas</option>
               {METADATA_LABELS.unidades.map(u => (
                 <option key={u} value={u}>{u}</option>
               ))}
@@ -163,16 +183,32 @@ export default function DashboardGestor({ registros, planos, onAdicionarPlano }:
             </select>
           </div>
 
+          {/* Cargo */}
+          <div>
+            <label htmlFor="gestor-filter-cargo" className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wider">Cargo</label>
+            <select
+              id="gestor-filter-cargo"
+              value={cargo}
+              onChange={(e) => setCargo(e.target.value)}
+              className="w-full rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-xs bg-white dark:bg-slate-900 text-slate-950 dark:text-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+            >
+              <option value="">Todos</option>
+              {METADATA_LABELS.cargos.map(c => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+          </div>
+
           {/* Ciclo */}
           <div>
-            <label htmlFor="gestor-filter-ciclo" className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wider">Ciclo Evaluativo</label>
+            <label htmlFor="gestor-filter-ciclo" className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wider">Ciclo</label>
             <select
               id="gestor-filter-ciclo"
               value={ciclo}
               onChange={(e) => setCiclo(e.target.value)}
               className="w-full rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-xs bg-white dark:bg-slate-900 text-slate-950 dark:text-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
             >
-              <option value="">Todos os Ciclos</option>
+              <option value="">Todos</option>
               <option value="Ciclo 2025">Ciclo 2025</option>
               <option value="Ciclo 2026">Ciclo 2026</option>
             </select>
@@ -187,11 +223,35 @@ export default function DashboardGestor({ registros, planos, onAdicionarPlano }:
               onChange={(e) => setTurno(e.target.value)}
               className="w-full rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-xs bg-white dark:bg-slate-900 text-slate-950 dark:text-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
             >
-              <option value="">Todos os Turnos</option>
+              <option value="">Todos</option>
               {METADATA_LABELS.turnos.map(t => (
                 <option key={t} value={t}>{t}</option>
               ))}
             </select>
+          </div>
+
+          {/* Data Início */}
+          <div>
+            <label htmlFor="gestor-filter-data-inicio" className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wider">Início</label>
+            <input
+              id="gestor-filter-data-inicio"
+              type="date"
+              value={dataInicio}
+              onChange={(e) => setDataInicio(e.target.value)}
+              className="w-full rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-xs bg-white dark:bg-slate-900 text-slate-950 dark:text-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+            />
+          </div>
+
+          {/* Data Fim */}
+          <div>
+            <label htmlFor="gestor-filter-data-fim" className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wider">Fim</label>
+            <input
+              id="gestor-filter-data-fim"
+              type="date"
+              value={dataFim}
+              onChange={(e) => setDataFim(e.target.value)}
+              className="w-full rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-xs bg-white dark:bg-slate-900 text-slate-950 dark:text-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+            />
           </div>
         </div>
       </div>

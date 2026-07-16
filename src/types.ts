@@ -121,15 +121,15 @@ export const BLOCOS_CONFIG: BlocoConfig[] = [
 ];
 
 export const METADATA_LABELS = {
-  unidades: ["Volta Redonda", "Barra Mansa", "Resende"],
-  areas: ["Operações", "Manutenção", "Administrativo", "Qualidade & HSE"],
+  unidades: ["Sesi Volta Redonda", "Senai Volta Redonda", "Sesi Barra Mansa", "Senai Resende"],
+  areas: ["Educação Básica", "Educação Profissional", "Saúde & Lazer", "Administrativo & Operações"],
   setores: {
-    "Operações": ["Linha de Montagem A", "Linha de Montagem B", "Pintura", "Logística Externa"],
-    "Manutenção": ["Oficina Mecânica", "Instrumentação", "Elétrica Industrial", "Planejamento (PCM)"],
-    "Administrativo": ["Recursos Humanos", "Suprimentos", "Controladoria & Financeiro", "Comunicação"],
-    "Qualidade & HSE": ["Laboratório Químico", "Inspeção de Qualidade", "Segurança do Trabalho", "Saúde Ocupacional"]
+    "Educação Básica": ["Ensino Fundamental", "Ensino Médio", "Laboratório Maker", "Coordenação Pedagógica"],
+    "Educação Profissional": ["Cursos Técnicos", "Aprendizagem Industrial", "Qualificação Profissional", "Oficinas Tecnológicas"],
+    "Saúde & Lazer": ["Odontologia Ocupacional", "Promoção da Saúde", "Academia & Esportes", "Eventos Culturais"],
+    "Administrativo & Operações": ["Secretaria Escolar", "Recursos Humanos", "Financeiro & Cobrança", "Infraestrutura & TI"]
   },
-  cargos: ["Operador(a)", "Técnico(a)", "Analista", "Supervisor(a)", "Engenheiro(a)"],
+  cargos: ["Professor(a)", "Instrutor(a) de Educação Profissional", "Pedagogo(a)", "Agente Administrativo", "Coordenador(a) Pedagógico(a)", "Técnico(a) de Especialidade"],
   turnos: ["Turno A (Matutino)", "Turno B (Vespertino)", "Turno C (Noturno)", "Horário Administrativo"],
   tiposAtendimento: ["Exame Periódico", "Acompanhamento Preventivo", "Retorno ao Trabalho", "Atendimento Ocupacional"],
   temposEmpresa: ["< 1 ano", "1 a 3 anos", "3 a 5 anos", "Mais de 5 anos"],

@@ -3,7 +3,8 @@ import { PlanoDeAcao, METADATA_LABELS, BLOCOS_CONFIG } from "../types";
 import { DataService } from "../services/dataService";
 import { 
   ClipboardList, Plus, Edit2, Trash2, CheckCircle, 
-  AlertCircle, Calendar, User, Search, MapPin, Briefcase 
+  AlertCircle, Calendar, User, Search, MapPin, Briefcase,
+  AlertTriangle
 } from "lucide-react";
 
 interface PlanosAcaoProps {
@@ -42,7 +43,16 @@ export default function PlanosAcao({ planos, onRefresh }: PlanosAcaoProps) {
     return planos.filter(p => {
       if (filterUnidade && p.unidade !== filterUnidade) return false;
       if (filterArea && p.area !== filterArea) return false;
-      if (filterStatus && p.status !== filterStatus) return false;
+      
+      if (filterStatus) {
+        if (filterStatus === "Vencidos") {
+          return p.status !== "Concluído" && getPrazoStatus(p.prazo, p.status).type === "vencido";
+        }
+        if (filterStatus === "Proximos") {
+          return p.status !== "Concluído" && getPrazoStatus(p.prazo, p.status).type === "proximo";
+        }
+        if (p.status !== filterStatus) return false;
+      }
       
       if (searchTerm) {
         const term = searchTerm.toLowerCase();
@@ -55,6 +65,19 @@ export default function PlanosAcao({ planos, onRefresh }: PlanosAcaoProps) {
       return true;
     });
   }, [planos, searchTerm, filterUnidade, filterArea, filterStatus]);
+
+  const alertStats = useMemo(() => {
+    let vencidos = 0;
+    let proximos = 0;
+    
+    planos.forEach(p => {
+      const pStatus = getPrazoStatus(p.prazo, p.status);
+      if (pStatus.type === "vencido") vencidos++;
+      if (pStatus.type === "proximo") proximos++;
+    });
+    
+    return { vencidos, proximos };
+  }, [planos]);
 
   const handleOpenCreate = () => {
     setIsEditing(false);
@@ -165,6 +188,46 @@ export default function PlanosAcao({ planos, onRefresh }: PlanosAcaoProps) {
         </button>
       </div>
 
+      {/* Componente Visual de Destaque de Alertas de Prazos */}
+      {(alertStats.vencidos > 0 || alertStats.proximos > 0) && (
+        <div className="bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-rose-500/10 rounded-lg text-rose-500 shrink-0 border border-rose-500/20 animate-pulse">
+              <AlertTriangle className="h-5 w-5" />
+            </div>
+            <div>
+              <h4 className="text-xs font-black text-slate-950 dark:text-white uppercase tracking-wider">Atenção Ocupacional: Prazos Críticos</h4>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium normal-case mt-0.5">
+                Existem planos de ação preventivos que necessitam de acompanhamento urgente para evitar inconformidades com as diretrizes da NR-1.
+              </p>
+            </div>
+          </div>
+          
+          <div className="flex flex-wrap gap-2">
+            {alertStats.vencidos > 0 && (
+              <button
+                id="btn-filtro-vencidos"
+                onClick={() => setFilterStatus("Vencidos")}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 hover:bg-rose-500/20 transition-colors cursor-pointer"
+              >
+                <AlertCircle className="h-4 w-4 shrink-0 animate-bounce" />
+                {alertStats.vencidos} Vencido{alertStats.vencidos === 1 ? "" : "s"}
+              </button>
+            )}
+            {alertStats.proximos > 0 && (
+              <button
+                id="btn-filtro-proximos"
+                onClick={() => setFilterStatus("Proximos")}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 transition-colors cursor-pointer"
+              >
+                <AlertCircle className="h-4 w-4 shrink-0" />
+                {alertStats.proximos} Próximo{alertStats.proximos === 1 ? "" : "s"} do Vencimento
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Barra de Filtros e Busca */}
       <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 shadow-xs flex flex-col md:flex-row gap-3">
         <div className="relative flex-1">
@@ -214,6 +277,8 @@ export default function PlanosAcao({ planos, onRefresh }: PlanosAcaoProps) {
             <option value="Pendente">Pendente</option>
             <option value="Em Andamento">Em Andamento</option>
             <option value="Concluído">Concluído</option>
+            <option value="Vencidos">⚠️ Apenas Vencidos</option>
+            <option value="Proximos">⏳ Próximos do Vencimento</option>
           </select>
         </div>
       </div>
@@ -230,23 +295,46 @@ export default function PlanosAcao({ planos, onRefresh }: PlanosAcaoProps) {
             if (plano.status === "Em Andamento") badgeColor = "bg-amber-100 dark:bg-amber-950/45 text-amber-850 dark:text-amber-400 border-amber-200 dark:border-amber-900/30";
             if (plano.status === "Concluído") badgeColor = "bg-emerald-100 dark:bg-emerald-950/45 text-emerald-850 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900/30";
 
+            const prStatus = getPrazoStatus(plano.prazo, plano.status);
+
             return (
               <div 
                 key={plano.id} 
-                className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-xs hover:shadow-xs transition-all flex flex-col justify-between space-y-4"
+                className={`bg-white dark:bg-slate-900 border rounded-xl p-5 shadow-xs hover:shadow-xs transition-all flex flex-col justify-between space-y-4 ${
+                  prStatus.type === "vencido" 
+                    ? "border-rose-300 dark:border-rose-900 shadow-rose-500/5 shadow-inner" 
+                    : prStatus.type === "proximo" 
+                      ? "border-amber-300 dark:border-amber-900" 
+                      : "border-slate-200 dark:border-slate-800"
+                }`}
               >
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] font-extrabold text-orange-500 bg-orange-500/10 border border-orange-200/50 dark:border-orange-900/30 px-2 py-0.5 rounded-full uppercase tracking-wider font-sans">
                       Bloco {plano.indicadorId}
                     </span>
-                    <span className={`text-[10px] font-extrabold px-2.5 py-0.5 border rounded-full uppercase tracking-wider font-sans ${badgeColor}`}>
-                      {plano.status}
-                    </span>
+                    <div className="flex items-center gap-1.5">
+                      {prStatus.type === "vencido" && (
+                        <span className="flex h-2 w-2 relative">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
+                        </span>
+                      )}
+                      <span className={`text-[10px] font-extrabold px-2.5 py-0.5 border rounded-full uppercase tracking-wider font-sans ${badgeColor}`}>
+                        {plano.status}
+                      </span>
+                    </div>
                   </div>
 
                   <h4 className="text-sm font-black text-slate-800 dark:text-white line-clamp-1 leading-snug">{plano.blocoNome}</h4>
                   <p className="text-xs text-slate-650 dark:text-slate-400 leading-relaxed min-h-[48px]">{plano.descricao}</p>
+                  
+                  {prStatus.type !== "normal" && (
+                    <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[9px] font-extrabold uppercase tracking-wider border ${prStatus.badgeClass}`}>
+                      <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+                      <span>{prStatus.label}</span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="space-y-3 pt-3 border-t border-slate-150 dark:border-slate-800">
@@ -256,8 +344,10 @@ export default function PlanosAcao({ planos, onRefresh }: PlanosAcaoProps) {
                       <span>{plano.unidade} ({plano.area})</span>
                     </div>
                     <div className="flex items-center gap-1.5 font-bold">
-                      <Calendar className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-                      <span>Prazo: {plano.prazo}</span>
+                      <Calendar className={`h-3.5 w-3.5 shrink-0 ${prStatus.type !== "normal" ? prStatus.iconColor : "text-slate-400"}`} />
+                      <span className={prStatus.type === "vencido" ? "text-rose-600 dark:text-rose-400 font-black animate-pulse" : prStatus.type === "proximo" ? "text-amber-600 dark:text-amber-400 font-extrabold" : ""}>
+                        Prazo: {plano.prazo}
+                      </span>
                     </div>
                     <div className="flex items-center gap-1.5 col-span-2 font-bold">
                       <User className="h-3.5 w-3.5 text-slate-400 shrink-0" />
@@ -486,4 +576,44 @@ export default function PlanosAcao({ planos, onRefresh }: PlanosAcaoProps) {
       )}
     </div>
   );
+}
+
+function getPrazoStatus(prazoStr: string, status: string): { type: "normal" | "proximo" | "vencido"; label: string; badgeClass: string; iconColor: string } {
+  if (status === "Concluído") {
+    return { type: "normal", label: "", badgeClass: "", iconColor: "" };
+  }
+  
+  try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const targetDate = new Date(prazoStr + "T00:00:00");
+    
+    if (isNaN(targetDate.getTime())) {
+      return { type: "normal", label: "", badgeClass: "", iconColor: "" };
+    }
+    
+    const diffTime = targetDate.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays < 0) {
+      return { 
+        type: "vencido", 
+        label: "Prazo Vencido", 
+        badgeClass: "bg-rose-500/15 border-rose-500/20 text-rose-600 dark:text-rose-400",
+        iconColor: "text-rose-500 animate-pulse"
+      };
+    } else if (diffDays <= 7) {
+      return { 
+        type: "proximo", 
+        label: `Vence em ${diffDays} dia${diffDays === 1 ? "" : "s"}`, 
+        badgeClass: "bg-amber-500/15 border-amber-500/20 text-amber-600 dark:text-amber-400",
+        iconColor: "text-amber-500"
+      };
+    }
+  } catch (e) {
+    // Silently ignore date parsing errors
+  }
+  
+  return { type: "normal", label: "", badgeClass: "", iconColor: "" };
 }

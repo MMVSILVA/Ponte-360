@@ -60,16 +60,66 @@ async function startServer() {
         "4. Alerte se o usuário fornecer dados que possam identificar individualmente uma pessoa e recuse-se a processá-los caso haja risco de quebra de sigilo.\n\n" +
         "Responda sempre em português brasileiro e utilize formatação em Markdown bem estruturada com emojis profissionais de sinalização (ex: 🟢, 🟡, 🟠, 🔴, 💡, 📋).";
 
-      const response = await ai.models.generateContent({
-        model: "gemini-3.5-flash",
-        contents: prompt,
-        config: {
-          systemInstruction,
-          temperature: 0.7,
-        },
-      });
+      const modelsToTry = ["gemini-3.5-flash", "gemini-flash-latest", "gemini-3.1-flash-lite"];
+      let textResponse = "";
+      let lastError: any = null;
 
-      res.json({ text: response.text });
+      for (const model of modelsToTry) {
+        const maxRetries = 2; // initial attempt + up to 2 retries
+        let success = false;
+        
+        for (let attempt = 0; attempt <= maxRetries; attempt++) {
+          try {
+            console.log(`[PONTE IA] Chamando API do Gemini usando modelo: ${model} (tentativa ${attempt + 1})`);
+            const response = await ai.models.generateContent({
+              model,
+              contents: prompt,
+              config: {
+                systemInstruction,
+                temperature: 0.7,
+              },
+            });
+
+            if (response && response.text) {
+              textResponse = response.text;
+              success = true;
+              console.log(`[PONTE IA] Sucesso com o modelo: ${model} na tentativa ${attempt + 1}`);
+              break;
+            }
+            throw new Error("Resposta de texto vazia recebida do modelo Gemini.");
+          } catch (err: any) {
+            lastError = err;
+            const errMsg = err.message || "";
+            const isTransient = errMsg.includes("503") || 
+                                errMsg.includes("high demand") || 
+                                errMsg.includes("UNAVAILABLE") ||
+                                errMsg.includes("temporary") ||
+                                errMsg.includes("ResourceExhausted") ||
+                                errMsg.includes("429") ||
+                                (err.status && (err.status === 503 || err.status === 429));
+            
+            console.warn(`[PONTE IA] Tentativa ${attempt + 1} com ${model} falhou:`, errMsg);
+            
+            if (isTransient && attempt < maxRetries) {
+              const delay = Math.pow(2, attempt) * 1000; // 1s, 2s
+              console.log(`[PONTE IA] Erro transitório. Aguardando ${delay}ms antes de tentar novamente...`);
+              await new Promise(resolve => setTimeout(resolve, delay));
+            } else {
+              break; // break to try the next model or give up
+            }
+          }
+        }
+        
+        if (success) {
+          break;
+        }
+      }
+
+      if (textResponse) {
+        res.json({ text: textResponse });
+      } else {
+        throw lastError || new Error("Não foi possível obter resposta de nenhum modelo Gemini disponível.");
+      }
     } catch (error: any) {
       console.error("Erro na rota Gemini:", error);
       res.status(500).json({ 

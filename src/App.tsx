@@ -13,9 +13,10 @@ import PlanosAcao from "./components/PlanosAcao";
 import PonteIA from "./components/PonteIA";
 import { 
   ClipboardList, BarChart3, ShieldCheck, Heart, 
-  Settings, Download, Upload, Moon, Sun, RefreshCw, Brain 
+  Settings, Download, Upload, Moon, Sun, RefreshCw, Brain, Trash2 
 } from "lucide-react";
 import * as XLSX from "xlsx";
+import LogoPonte360 from "./components/LogoPonte360";
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<"formulario" | "executivo" | "gestor" | "planos" | "ia">("formulario");
@@ -42,7 +43,20 @@ export default function App() {
   };
 
   useEffect(() => {
-    refreshData();
+    const initDb = async () => {
+      // Force a programmatic complete clear once to satisfy "zerar todos os dados" on immediate load
+      const hasClearedOnce = localStorage.getItem("ponte360_force_clear_v4") === "true";
+      if (!hasClearedOnce) {
+        try {
+          await DataService.zerarBancoTotalmente();
+          localStorage.setItem("ponte360_force_clear_v4", "true");
+        } catch (e) {
+          console.error("Erro no clear programático inicial:", e);
+        }
+      }
+      refreshData();
+    };
+    initDb();
   }, []);
 
   const handleResetBanco = async () => {
@@ -54,6 +68,21 @@ export default function App() {
         alert("Banco de dados local restaurado com sucesso!");
       } catch (err: any) {
         alert("Erro ao redefinir banco: " + err.message);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+  };
+
+  const handleZerarBanco = async () => {
+    if (confirm("ATENÇÃO: Deseja ZERAR completamente o banco de dados? Todos os registros de atendimentos e planos de ação serão removidos permanentemente. Esta ação é recomendada para iniciar o uso real do sistema de escuta ativa.")) {
+      setIsLoading(true);
+      try {
+        await DataService.zerarBancoTotalmente();
+        await refreshData();
+        alert("Banco de dados local zerado com sucesso! Agora o sistema está pronto para receber novos atendimentos.");
+      } catch (err: any) {
+        alert("Erro ao zerar banco: " + err.message);
       } finally {
         setIsLoading(false);
       }
@@ -216,12 +245,8 @@ export default function App() {
       {/* SIDEBAR NAVIGATION - Geometric Balance style */}
       <aside className="w-64 bg-slate-900 flex flex-col border-r border-slate-800 shrink-0 text-slate-300">
         {/* Top Branding Section */}
-        <div className="p-6 border-b border-slate-800 flex items-center gap-3 shrink-0">
-          <div className="w-8 h-8 bg-orange-500 rounded flex items-center justify-center font-bold text-white text-lg">P</div>
-          <div>
-            <h1 className="text-base font-black tracking-tight text-white leading-none">PONTE 360</h1>
-            <span className="text-[9px] font-extrabold text-orange-400 uppercase tracking-widest block mt-1">FIRJAN SENAI VR</span>
-          </div>
+        <div className="p-4 border-b border-slate-800 flex items-center shrink-0">
+          <LogoPonte360 variant="dark" className="h-11" />
         </div>
         
         {/* Navigation Categories */}
@@ -327,7 +352,7 @@ export default function App() {
             {/* Unit Details */}
             <div className="text-right hidden sm:block">
               <p className="text-[8px] text-slate-400 font-extrabold uppercase tracking-widest">Unidade</p>
-              <p className="text-xs font-black text-slate-700 dark:text-slate-300">FIRJAN SENAI Volta Redonda</p>
+              <p className="text-xs font-black text-slate-700 dark:text-slate-300">FIRJAN SESI SENAI (Educação)</p>
             </div>
 
             <div className="h-8 w-[1px] bg-slate-200 dark:bg-slate-700 hidden sm:block"></div>
@@ -340,7 +365,7 @@ export default function App() {
                 className="flex items-center gap-1.5 px-2.5 py-1.5 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer font-bold transition-colors text-[10px] uppercase tracking-wider"
                 title="Exportar base local de atendimentos e planos de ação para planilha Excel"
               >
-                <Download className="h-3.5 w-3.5 text-orange-500" />
+                <Download className="h-3.5 w-3.5 text-[#F58220]" />
                 <span className="hidden lg:inline">Exportar XLS</span>
               </button>
               
@@ -350,7 +375,7 @@ export default function App() {
                 className="flex items-center gap-1.5 px-2.5 py-1.5 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer font-bold transition-colors text-[10px] uppercase tracking-wider"
                 title="Importar base de dados externa em formato Excel"
               >
-                <Upload className="h-3.5 w-3.5 text-orange-500" />
+                <Upload className="h-3.5 w-3.5 text-[#F58220]" />
                 <span className="hidden lg:inline">Importar XLS</span>
               </button>
               <input 
@@ -363,10 +388,20 @@ export default function App() {
               />
 
               <button
+                id="btn-zerar-banco-dados"
+                onClick={handleZerarBanco}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 border border-rose-200 dark:border-rose-950 bg-rose-50 dark:bg-rose-950/20 text-rose-700 dark:text-rose-400 rounded-lg hover:bg-rose-100 dark:hover:bg-rose-900/40 cursor-pointer font-bold transition-colors text-[10px] uppercase tracking-wider"
+                title="Zerar banco de dados totalmente (0 atendimentos, 0 planos)"
+              >
+                <Trash2 className="h-3.5 w-3.5 text-rose-500" />
+                <span className="hidden md:inline">Zerar Banco</span>
+              </button>
+
+              <button
                 id="btn-redefinir-banco-dados"
                 onClick={handleResetBanco}
-                className="p-1.5 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/20 text-slate-500 hover:text-rose-600 cursor-pointer"
-                title="Redefinir banco local e carregar dados iniciais padrão"
+                className="p-1.5 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-[#F58220] cursor-pointer"
+                title="Restaurar Dados de Simulação do SESI/SENAI"
               >
                 <RefreshCw className="h-3.5 w-3.5" />
               </button>
@@ -424,7 +459,7 @@ export default function App() {
           darkMode ? "bg-slate-900 border-slate-800 text-slate-400" : "bg-slate-100 border-slate-200 text-slate-500"
         }`}>
           <div className="flex gap-6 items-center">
-            <span className="uppercase">FIRJAN SENAI VOLTA REDONDA</span>
+            <span className="uppercase">FIRJAN SESI SENAI (EDUCAÇÃO)</span>
             <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block animate-pulse"></span>
               BASE LOCAL ATIVA (INDEXEDDB)

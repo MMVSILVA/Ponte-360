@@ -12,8 +12,10 @@ import {
 } from "recharts";
 import { 
   Filter, Award, ShieldAlert, Users, TrendingUp, Clock, Calendar, 
-  Activity, RefreshCw, BarChart4, Grid, AlertTriangle, ToggleLeft, ToggleRight
+  Activity, RefreshCw, BarChart4, Grid, AlertTriangle, ToggleLeft, ToggleRight,
+  Download
 } from "lucide-react";
+import { jsPDF } from "jspdf";
 
 interface DashboardExecutivoProps {
   registros: Atendimento[];
@@ -149,8 +151,243 @@ export default function DashboardExecutivo({ registros, onResetDatabase }: Dashb
     return list.sort((a, b) => b.risk - a.risk);
   }, [registros, filtros]);
 
+  const handleExportPDF = () => {
+    const doc = new jsPDF();
+    
+    // Header Colors
+    const primaryColor = [15, 76, 129]; // #0F4C81
+    const secondaryColor = [245, 130, 32]; // #F58220
+
+    // Header Background
+    doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+    doc.rect(0, 0, 210, 40, "F");
+
+    // Decorative Orange Accent Line
+    doc.setFillColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
+    doc.rect(0, 40, 210, 3, "F");
+
+    // Logo Text or Icon representation in Header
+    doc.setTextColor(255, 255, 255);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(22);
+    doc.text("Ponte 360", 15, 20);
+    
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    doc.text("FIRJAN SESI SENAI (Educacao e Saude)", 15, 28);
+    
+    doc.setFont("helvetica", "italic");
+    doc.text("Da escuta a transformacao", 15, 33);
+
+    // Title
+    doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(16);
+    doc.text("RELATORIO DE SAUDE PSICOSSOCIAL", 15, 55);
+
+    // Subtitle / Date
+    doc.setTextColor(100, 100, 100);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    const dateStr = new Date().toLocaleDateString("pt-BR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit"
+    });
+    doc.text(`Gerado em: ${dateStr} | Base de Dados Local Ponte 360`, 15, 61);
+
+    // Divider
+    doc.setDrawColor(220, 225, 230);
+    doc.line(15, 65, 195, 65);
+
+    // Filter section
+    doc.setTextColor(50, 50, 50);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(11);
+    doc.text("Filtros Ativos do Relatorio:", 15, 73);
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    let filterLines = [
+      `Unidade: ${unidade || "Todas"}`,
+      `Area: ${area || "Todas"}`,
+      `Setor: ${setor || "Todos"}`,
+      `Cargo: ${cargo || "Todos"}`,
+      `Ciclo: ${ciclo || "Todos"}`,
+      `Turno: ${turno || "Todos"}`
+    ];
+    
+    if (dataInicio || dataFim) {
+      filterLines.push(`Periodo: ${dataInicio || "Inicio"} ate ${dataFim || "Fim"}`);
+    }
+
+    // Print filters in 2 columns
+    let col1 = filterLines.slice(0, 4).join("  |  ");
+    let col2 = filterLines.slice(4).join("  |  ");
+    doc.text(col1, 15, 79);
+    doc.text(col2, 15, 84);
+
+    // Divider
+    doc.line(15, 88, 195, 88);
+
+    // Key Metrics Dashboard
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(11);
+    doc.text("Indicadores de Desempenho e Sinais Organizacionais:", 15, 96);
+
+    // Metrics Box
+    doc.setFillColor(248, 250, 252); // light slate background
+    doc.rect(15, 100, 180, 26, "F");
+    doc.setDrawColor(203, 213, 225);
+    doc.rect(15, 100, 180, 26, "D");
+
+    // Metric items
+    doc.setFontSize(9);
+    doc.setTextColor(120, 120, 120);
+    doc.text("Amostra Atendimentos", 20, 107);
+    doc.text("Indice Risco Geral", 65, 107);
+    doc.text("Absenteismo Medio", 110, 107);
+    doc.text("Horas Extras Medias", 155, 107);
+
+    doc.setFontSize(12);
+    doc.setTextColor(15, 23, 42);
+    doc.text(`${metricas.totalAvaliacoes}`, 20, 115);
+    doc.text(`${metricas.indiceRiscoGeral}%`, 65, 115);
+    doc.text(`${metricas.absenteismoMedio}%`, 110, 115);
+    doc.text(`${metricas.horasExtrasMedia} h/mes`, 155, 115);
+
+    doc.setFontSize(8);
+    doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+    doc.text("Preservacao do Anonimato", 20, 121);
+    doc.text(geralClassificacao.label.toUpperCase(), 65, 121);
+    doc.text("Taxa Mensal Media", 110, 121);
+    doc.text("Indicador de Sobrecarga", 155, 121);
+
+    // Sub-title for Blocks Table
+    doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(11);
+    doc.text("Detalhamento por Bloco de Saude Psicossocial (Metodo Fatores de Risco e Protecao):", 15, 136);
+
+    // Table Header
+    doc.setFillColor(241, 245, 249);
+    doc.rect(15, 140, 180, 8, "F");
+    doc.setDrawColor(203, 213, 225);
+    doc.line(15, 140, 195, 140);
+    doc.line(15, 148, 195, 148);
+
+    doc.setFontSize(8.5);
+    doc.setTextColor(71, 85, 105);
+    doc.text("Bloco Tematico Avaliado", 18, 145);
+    doc.text("Fator de Risco", 130, 145);
+    doc.text("Fator de Protecao", 155, 145);
+    doc.text("Classificacao", 180, 145);
+
+    // Render 7 Indicators
+    let startY = 154;
+    indicadores.forEach((ind, i) => {
+      // Alternating background
+      if (i % 2 === 0) {
+        doc.setFillColor(252, 252, 252);
+        doc.rect(15, startY - 4, 180, 7, "F");
+      }
+      
+      doc.setFontSize(8);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(30, 41, 59);
+      doc.text(`${ind.id}. ${ind.nome}`, 18, startY);
+
+      doc.setFont("helvetica", "normal");
+      doc.text(`${ind.indiceRisco}%`, 130, startY);
+      doc.text(`${ind.indiceFavorabilidade}%`, 155, startY);
+
+      const rating = getClassificacao(ind.indiceRisco);
+      doc.text(rating.label, 180, startY);
+
+      doc.setDrawColor(241, 245, 249);
+      doc.line(15, startY + 3, 195, startY + 3);
+
+      startY += 7.5;
+    });
+
+    // Recommendations Box
+    startY += 3;
+    doc.setFillColor(255, 247, 237); // Light orange background for recommendation
+    doc.rect(15, startY, 180, 32, "F");
+    doc.setDrawColor(254, 215, 170);
+    doc.rect(15, startY, 180, 32, "D");
+
+    doc.setTextColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9);
+    doc.text("RECOMENDACOES DA PLATAFORMA PONTE 360:", 18, startY + 6);
+
+    doc.setTextColor(80, 70, 60);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    
+    let recs = [];
+    if (metricas.indiceRiscoGeral >= 50) {
+      recs = [
+        "- ALERTA CRITICO: Indices de risco geral elevados requerem acao preventiva urgente.",
+        "- Realizar escuta ativa ativa focada nas areas com maior pontuacao de risco.",
+        "- Rever metas e sobrecarga laboral com a equipe de engenharia e producao de servicos.",
+        "- Fortalecer os canais eticos de denuncia e promover rodas de dialogo com a coordenacao."
+      ];
+    } else if (metricas.indiceRiscoGeral >= 30) {
+      recs = [
+        "- ALERTA DE ACOMPANHAMENTO: Riscos psicossociais moderados detectados.",
+        "- Recomenda-se realizar reunioes de alinhamento com foco no apoio da lideranca e acolhimento.",
+        "- Avaliar a incidencia de horas extras elevadas e cansaco mental nos setores afetados.",
+        "- Incentivar atividades de integracao social e suporte de saude e bem-estar ocupacional."
+      ];
+    } else {
+      recs = [
+        "- RISCO BAIXO: Ambiente equilibrado com fortes fatores protetores.",
+        "- Manter as boas praticas de gestao humanizada e escuta ativa ativa desenvolvidas.",
+        "- Monitorar a estabilidade dos indicadores e divulgar resultados positivos para o time.",
+        "- Continuar com a sensibilizacao etica e prevencao de burnout de forma integrada."
+      ];
+    }
+    
+    recs.forEach((rec, idx) => {
+      doc.text(rec, 18, startY + 12 + (idx * 5));
+    });
+
+    // Signature Block & Footer
+    doc.setDrawColor(220, 225, 230);
+    doc.line(15, 275, 195, 275);
+    
+    doc.setFontSize(7.5);
+    doc.setTextColor(150, 150, 150);
+    doc.text("Ponte 360 - Transformando Dados de Escuta em Planos de Acao Preventiva", 15, 281);
+    doc.text("Pagina 1 de 1", 180, 281);
+
+    // Save PDF
+    doc.save(`Relatorio_Saude_Psicossocial_Ponte360_${new Date().toISOString().split('T')[0]}.pdf`);
+  };
+
   return (
     <div className="space-y-6" id="dashboard-executivo">
+      
+      {/* Executive Header Banner with PDF Export action */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-900 text-white rounded-xl p-5 border border-slate-800 shadow-sm">
+        <div>
+          <h2 className="text-lg font-black tracking-tight text-white">Painel Executivo de Saúde Psicossocial</h2>
+          <p className="text-xs text-slate-400 mt-0.5">Visão consolidada e agregada baseada nos pilares do método de escuta ativa Ponte 360.</p>
+        </div>
+        {!isSampleTooSmall && (
+          <button
+            onClick={handleExportPDF}
+            className="flex items-center justify-center gap-2 px-4 py-2 bg-[#F58220] hover:bg-orange-600 text-white text-xs font-bold uppercase tracking-wider rounded-lg shadow-sm transition-colors cursor-pointer"
+          >
+            <Download className="h-4 w-4" />
+            Exportar Relatório PDF
+          </button>
+        )}
+      </div>
       
       {/* 1. Painel de Filtros */}
       <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-5 shadow-xs space-y-4">
